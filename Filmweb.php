@@ -4,11 +4,15 @@
 * @copyright (c) 2013 nSolutions.pl
 * @description Filmweb.pl API
 * @version 1.0b
+* @link https://github.com/nSolutionsPL/filmweb-api
+* @license http://creativecommons.org/licenses/by/3.0/ Creative Commons 3.0
 */
 namespace nSolutions;
 class Filmweb
 {
     protected static $_instance;
+    
+    const KEY = 'qjcGhW2JnvGT9dfCt3uT_jozR3s';
     
     // Ustawienia adresów
     public static $_config =
@@ -92,7 +96,7 @@ class Filmweb
         76 => "propagandowy"
     ];
     
-    const API_SERVER = 'https://ssl.filmweb.pl/api?version=1.0&appId=android&';
+    const API_SERVER = 'https://ssl.filmweb.pl/api?';
     protected $request;
     
     
@@ -110,9 +114,6 @@ class Filmweb
     {
         // Automatyczne ładowanie wymaganych klas
         spl_autoload_register('\nSolutions\Filmweb::loader');
-        
-        $this->request = new \nSolutions\Request;
-        $this->parser = new \nSolutions\Parser;
     }
     
   /**
@@ -122,34 +123,21 @@ class Filmweb
    */
     public function __call($method, $arguments)
     {
-        // Wykonanie zapytania do Filmweb'a.
-        return \nSolutions\API::$method($arguments);
+        $class = '\nSolutions\\API\\Methods\\'.$method;
+        return new $class($arguments);
     }
 
    /**
     * Automatyczne ładowanie klas
     * @param string $class
-    * @throws Exception 
+    * @throws \Exception
     */
     public static function loader($class)
     {
-        $class = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'Filmweb' . DIRECTORY_SEPARATOR . strtr($class, ['Filmweb_' => '', 'nSolutions\\' => '']) . '.php';
-        
+        $class = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'Filmweb' . DIRECTORY_SEPARATOR . strtr($class, ['\\' => '/']) . '.php';
         if(file_exists($class))
             include $class;
         else
             throw new \Exception('Could not find class: Filmweb_'.basename($class));
     }
-    
-    public static function getConfig($key)
-    {
-        return $this->_config[$key];
-    }
-    
-   /**
-    * Funkcja odpowiedzialna za `przerobienie` odpowiedzi z API.
-    * @param string $response 
-    * @return array
-    */
-    public static function parse($response){}
 }

@@ -4,6 +4,8 @@
 * @copyright (c) 2013 nSolutions.pl
 * @description Filmweb.pl API
 * @version 1.0b
+* @link https://github.com/nSolutionsPL/filmweb-api
+* @license http://creativecommons.org/licenses/by/3.0/ Creative Commons 3.0
 */
 namespace nSolutions;
 class Request
@@ -21,20 +23,30 @@ class Request
         CURLOPT_SSL_VERIFYHOST => FALSE
     ];
     
-    public static function execute($url, array $options = NULL)
+    public static function execute($params, array $options = NULL)
     {
+        $params += array_merge([
+            'version' => 1.0,
+            'appId' => 'android'
+        ]);
+        
         if ($options === NULL)
             $options = \nSolutions\Request::$default_options;
         else
             $options = $options + \nSolutions\Request::$default_options;
         
-        $request = curl_init($url);
+        $request = curl_init(\nSolutions\Filmweb::API_SERVER.http_build_query($params));
         
         if ( ! curl_setopt_array($request, $options))
                 throw new \Exception('Failed to set CURL options, check CURL documentation: http://php.net/curl_setopt_array');
         
         $response = curl_exec($request);
         curl_close($request);
+        
+        if(substr($response, 0, 2) !== 'ok')
+        {
+            throw new \Exception('Nie otrzymano odpowiedzi');
+        }
         
         return $response;
     }
