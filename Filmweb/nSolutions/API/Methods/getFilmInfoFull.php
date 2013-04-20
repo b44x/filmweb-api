@@ -19,7 +19,7 @@ final class getFilmInfoFull extends \nSolutions\API\Methods
     */
     protected $_args =
     [
-        'video_id'
+        'filmId'
     ];
     
    /**
@@ -60,7 +60,7 @@ final class getFilmInfoFull extends \nSolutions\API\Methods
     protected function prepare()
     {
         $this->methods = [
-            $this->method => $this->video_id
+            $this->method => $this->filmId
         ];        
     }
     

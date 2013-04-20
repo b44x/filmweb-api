@@ -96,6 +96,25 @@ class Filmweb
         76 => "propagandowy"
     ];
     
+    public static $roles =
+    [
+        1 => 'scenarzysta',
+        2 => 'reżyser',
+        3 => 'zdjęcia',
+        4 => 'muzyka',
+        5 => 'scenografia',
+        6 => 'aktor',
+        7 => 'producent',
+        10 => 'montaż',
+        13 => 'kostiumy',
+        17 => 'materiały do scenariusza',
+        18 => 'dźwięk',
+        19 => 'materiały archiwalne',
+        20 => 'głos',
+        21 => 'we własnej osobie'
+        
+    ];
+    
     const API_SERVER = 'https://ssl.filmweb.pl/api?';
     protected $request;
     

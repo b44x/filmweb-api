@@ -37,20 +37,28 @@ class Methods
     }
 
    /**
-    * Przerobienie odpowiedzi z API filmweba.
+    * Sparsowanie odpowiedzi z API filmweba.
     * @param object $response
     * @return \stdClass
     */
     protected function parse($response)
     {
         $response = explode("\n", $response);
-        $response = json_decode(preg_replace('/ t:[0-9]+/i', '', $response[1]));
         
+        // Nie ma żadnych danych.
+        if($response [1] == 'exc NullPointerException')
+            return FALSE;
+        
+        $response = json_decode(preg_replace('/ t:[0-9]+/i', '', $response[1]));
+        return $this->getData($response);
+    }
+    
+    protected function getData($response)
+    {
         $data = new \stdClass;
         foreach($response as $k => $v)
         {
             $key = $this->_response_keys[$k];
-            
             if(isset($this->_functions[$key]))
             {
                 $function = $this->_functions[$key];
@@ -61,7 +69,6 @@ class Methods
                 $data->$key = $v;
             }
         }
-        
         return $data;
     }
 
