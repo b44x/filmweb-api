@@ -36,13 +36,13 @@
         ->execute();
 ?>
 
-<pre><?php var_dump($fimweb->getFilmInfoFull(491118)->execute()); ?></pre>
-<pre><?php var_dump($fimweb->getUserFilmVotes(2436894, 0)->execute()); ?></pre>
+<pre><?php var_dump($filmweb->getFilmInfoFull(491118)->execute()); ?></pre>
+<pre><?php var_dump($filmweb->getUserFilmVotes(2436894, 0)->execute()); ?></pre>
 
 <h2>Obsada filmu</h2>
 <?php foreach(nSolutions\Filmweb::$roles as $type => $role):?>
 <h3><?php echo $role; ?></h3>
-<?php $casts = $fimweb->getFilmPersons(491118, $type, 0)->execute(); ?>
+<?php $casts = $filmweb->getFilmPersons(491118, $type, 0)->execute(); ?>
 <?php if($casts):?>
     <?php foreach($casts as $cast):?>
         <div style="margin:10px 0px;">
