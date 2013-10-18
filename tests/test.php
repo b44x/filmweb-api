@@ -15,7 +15,7 @@
     require_once '../Filmweb.php';
 
     // Utworzenie nowej instancji.
-    $fimweb = \nSolutions\Filmweb::instance();
+    $filmweb = \nSolutions\Filmweb::instance();
 ?>
 <!DOCTYPE html>
 <html>
@@ -24,7 +24,20 @@
   </head>
   <body>
 <h2>Pełne informacje o filmie</h2>
+<?php
+    // Przykładowe zachowanie sesji po zalogowaniu.
+    \nSolutions\Request::$default_options += array(
+        CURLOPT_COOKIEJAR => dirname(__FILE__).DIRECTORY_SEPARATOR.'cookies.txt',
+        CURLOPT_COOKIEFILE => dirname(__FILE__).DIRECTORY_SEPARATOR.'cookies.txt'
+    );
+
+    // Logujemy się na konto
+    $filmweb->Login('login', 'haslo')
+        ->execute();
+?>
+
 <pre><?php var_dump($fimweb->getFilmInfoFull(491118)->execute()); ?></pre>
+<pre><?php var_dump($fimweb->getUserFilmVotes(2436894, 0)->execute()); ?></pre>
 
 <h2>Obsada filmu</h2>
 <?php foreach(nSolutions\Filmweb::$roles as $type => $role):?>

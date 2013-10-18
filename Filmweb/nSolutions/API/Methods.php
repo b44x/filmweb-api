@@ -14,6 +14,8 @@ class Methods
     protected $_args = [];
     protected $method_query, $signature;
     
+    protected $post = FALSE;
+
    /**
     * Konstruktor / Sprawdzamy czy podano wszystkie wymagane argumenty.
     * @param array $args
@@ -44,9 +46,9 @@ class Methods
     protected function parse($response)
     {
         $response = explode("\n", $response);
-        
+
         // Nie ma żadnych danych.
-        if($response [1] == 'exc NullPointerException')
+        if($response[1] == 'exc NullPointerException')
             return FALSE;
         
         $response = json_decode(preg_replace('/ t:[0-9]+/i', '', $response[1]));
@@ -88,11 +90,28 @@ class Methods
         $method_query = $method;
         $signature = $this->_createApiSignature($method);
         
-        $response = \nSolutions\Request::execute([
-            'methods' => $method_query,
-            'signature' => $signature
-        ]);
-        
+        $params = ['methods' => $method_query, 'signature' => $signature, 'version' => '1.0', 'appId' => 'android'];
+
+        // Jeśli metoda jest POST-em
+        if($this->post)
+        {
+            $string = '';
+
+            foreach($params as $key => $param)
+            {
+                $string .= $key.'='.$param.'&';
+            }
+
+            $response = \nSolutions\Request::execute(array(), [
+                CURLOPT_POST => TRUE,
+                CURLOPT_POSTFIELDS => $string
+            ]);
+        }
+        else
+        {
+            $response = \nSolutions\Request::execute($params);
+        }
+
         return $this->parse($response);
     }
     
