@@ -156,7 +156,5 @@ class Filmweb
         $class = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'Filmweb' . DIRECTORY_SEPARATOR . strtr($class, ['\\' => '/']) . '.php';
         if(file_exists($class))
             include $class;
-        else
-            throw new \Exception('Could not find class: Filmweb_'.basename($class));
     }
 }
