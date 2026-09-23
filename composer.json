@@ -16,6 +16,10 @@
             "homepage": "http://www.nsolutions.pl/"
         }
     ],
+    "support": {
+        "issues": "https://github.com/b44x/filmweb-api/issues",
+        "source": "https://github.com/b44x/filmweb-api"
+    },
     "require": {
         "php": "^8.2",
         "ext-json": "*",

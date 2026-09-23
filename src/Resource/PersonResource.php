@@ -14,6 +14,9 @@ use NSolutions\Filmweb\Model\Person;
  */
 final readonly class PersonResource
 {
+    /**
+     * @internal use {@see \NSolutions\Filmweb\Filmweb} to obtain resources
+     */
     public function __construct(private ApiClient $client) {}
 
     /**

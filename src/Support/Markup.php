@@ -6,6 +6,8 @@ namespace NSolutions\Filmweb\Support;
 
 /**
  * Filmweb texts contain BBCode-like links, e.g. `[person=87]Keanu Reeves[/person]`.
+ *
+ * @internal not covered by the backward compatibility promise
  */
 final class Markup
 {

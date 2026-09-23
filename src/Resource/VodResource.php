@@ -22,6 +22,9 @@ final class VodResource
     /** @var array<int, VodProvider>|null */
     private ?array $providers = null;
 
+    /**
+     * @internal use {@see \NSolutions\Filmweb\Filmweb} to obtain resources
+     */
     public function __construct(private readonly ApiClient $client) {}
 
     /**

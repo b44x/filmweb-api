@@ -9,6 +9,8 @@ use NSolutions\Filmweb\Support\Data;
 
 /**
  * Maps `[{"id": 87, "name": "Keanu Reeves"}, …]` lists shared by several endpoints.
+ *
+ * @internal not covered by the backward compatibility promise
  */
 final class PersonRefMapper
 {

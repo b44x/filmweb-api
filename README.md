@@ -4,6 +4,8 @@
 ![PHP](https://img.shields.io/badge/php-%5E8.2-777BB4?logo=php&logoColor=white)
 ![PHPStan](https://img.shields.io/badge/PHPStan-level%20max-brightgreen)
 ![Code style](https://img.shields.io/badge/code%20style-PER--CS%202.0-blue)
+[![Packagist](https://img.shields.io/packagist/v/nsolutionspl/filmweb-api?include_prereleases)](https://packagist.org/packages/nsolutionspl/filmweb-api)
+[![License](https://img.shields.io/github/license/b44x/filmweb-api)](LICENSE)
 
 Nieoficjalny, w pełni typowany klient REST API [Filmweb.pl](https://www.filmweb.pl) (`https://www.filmweb.pl/api/v1`) –
 tego samego, z którego korzysta strona filmweb.pl.
@@ -21,7 +23,7 @@ echo "{$film->info->title} ({$film->info->year}) – ★ {$film->rating?->rounde
 > [!NOTE]
 > To jest **2.x** – przepisana od zera wersja dla PHP 8.2+, oparta na REST API strony.
 > Stare mobilne API (`ssl.filmweb.pl/api`), z którego korzystała wersja 1.x, **już nie działa**.
-> Wersja legacy (PHP 5.4) jest dostępna pod tagiem [`v1.0.0`](https://github.com/b44x/filmweb-api/tree/v1.0.0). Przechodzisz z 1.x? Zobacz [UPGRADE.md](UPGRADE.md).
+> Wersja legacy (PHP 5.4) jest dostępna jako [`v1.0.0`](https://github.com/b44x/filmweb-api/releases/tag/v1.0.0) / gałąź [`1.x`](https://github.com/b44x/filmweb-api/tree/1.x). Przechodzisz z 1.x? Zobacz [UPGRADE.md](UPGRADE.md).
 
 > [!WARNING]
 > API nie jest oficjalnie udokumentowane ani wspierane przez Filmweb – może zmienić się bez ostrzeżenia.
@@ -37,6 +39,7 @@ echo "{$film->info->title} ({$film->info->year}) – ★ {$film->rating?->rounde
 - [Transport HTTP](#transport-http)
 - [Własne endpointy](#własne-endpointy)
 - [Architektura](#architektura)
+- [Wersjonowanie](#wersjonowanie)
 - [Development](#development)
 
 ## Cechy
@@ -53,8 +56,10 @@ echo "{$film->info->title} ({$film->info->year}) – ★ {$film->rating?->rounde
 ## Instalacja
 
 ```bash
-composer require nsolutionspl/filmweb-api
+composer require nsolutionspl/filmweb-api:^2.0@beta
 ```
+
+Do czasu wydania `2.0.0` dostępne są wersje beta – po wydaniu wystarczy `composer require nsolutionspl/filmweb-api`.
 
 Wymagania: PHP `^8.2`, `ext-json` oraz `ext-curl` (dla domyślnego transportu).
 
@@ -274,6 +279,27 @@ src/
 - Testy podmieniają tylko transport (`tests/Fixtures/FakeTransport.php`) i używają prawdziwych odpowiedzi API
   z `tests/Fixtures/responses/`.
 
+## Wersjonowanie
+
+Projekt stosuje [Semantic Versioning](https://semver.org/lang/pl/), zmiany opisuje [CHANGELOG.md](CHANGELOG.md).
+
+**Publiczne API** (objęte obietnicą zgodności): `Filmweb`, `Config`, zasoby z `Resource/` (bez konstruktorów),
+`Model/`, `Exception/`, `Http/` (interfejs `Transport` i jego implementacje), `Api/Endpoint`, `Api/Endpoint/**`
+oraz `Support/Data`. Klasy i metody oznaczone `@internal` mogą zmienić się w dowolnej wersji.
+
+| Wersja | Co może się zmienić |
+|---|---|
+| **PATCH** `2.0.x` | poprawki, np. dostosowanie mapowania do zmian w odpowiedziach Filmweb |
+| **MINOR** `2.x.0` | nowe endpointy, metody i **opcjonalne** pola modeli (na końcu konstruktora, z wartością domyślną) |
+| **MAJOR** `3.0.0` | usunięcie/zmiana publicznego API, podniesienie minimalnego PHP; wcześniej `@deprecated` w wersji minor |
+
+| Gałąź | Wersje | Status |
+|---|---|---|
+| `master` | 2.x | rozwijana |
+| [`1.x`](https://github.com/b44x/filmweb-api/tree/1.x) | 1.x | legacy – nie działa (mobilne API wyłączone), bez wsparcia |
+
+Wydania tworzy workflow [Release](.github/workflows/release.yml) – tag, GitHub Release i notatki z CHANGELOG.
+
 ## Development
 
 ```bash
@@ -286,6 +312,6 @@ composer check     # wszystko naraz
 
 ## Licencja
 
-Kod: [LICENSE.md](LICENSE.md). Dane pochodzą z serwisu Filmweb.pl i należą do ich właścicieli.
+[MIT](LICENSE). Dane pochodzą z serwisu Filmweb.pl i należą do ich właścicieli.
 
 Projekt jest kontynuacją [filmweb-php](https://github.com/nSolutionsPL/filmweb-php).

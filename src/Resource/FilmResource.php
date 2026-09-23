@@ -30,6 +30,9 @@ use NSolutions\Filmweb\Model\TopRole;
  */
 final readonly class FilmResource
 {
+    /**
+     * @internal use {@see \NSolutions\Filmweb\Filmweb} to obtain resources
+     */
     public function __construct(
         private ApiClient $client,
         private PersonResource $people,

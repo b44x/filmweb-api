@@ -1,5 +1,8 @@
 # Aktualizacja z 1.x do 2.0
 
+> Nie możesz teraz migrować? Przypnij starą wersję: `composer require nsolutionspl/filmweb-api:^1.0`
+> (pamiętaj, że 1.x nie działa – Filmweb wyłączył mobilne API).
+
 Wersja 1.x korzystała z mobilnego API (`ssl.filmweb.pl/api`), które **przestało działać**.
 Wersja 2.0 używa REST API strony (`www.filmweb.pl/api/v1`), więc zmieniły się zarówno kod, jak i dostępne dane.
 

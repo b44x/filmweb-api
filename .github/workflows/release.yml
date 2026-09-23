@@ -1,0 +1,86 @@
+name: Release
+
+# Creates an annotated tag and a GitHub Release with notes taken from CHANGELOG.md.
+# Run it from the Actions tab (or `gh workflow run release.yml -f version=2.0.0`).
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version without the "v" prefix, e.g. 2.0.0 or 2.0.0-beta.1'
+        required: true
+      ref:
+        description: 'Branch or commit SHA to tag'
+        required: true
+        default: master
+      latest:
+        description: 'Mark as the latest release (ignored for pre-releases)'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ inputs.version }}
+      REF: ${{ inputs.ref }}
+      TAG: v${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: master          # CHANGELOG.md on master is the single source of release notes
+          fetch-depth: 0
+
+      - name: Validate version and target
+        run: |
+          semver='^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$'
+          [[ "$VERSION" =~ $semver ]] || { echo "::error::'$VERSION' is not a valid SemVer version"; exit 1; }
+
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "::error::Tag $TAG already exists"; exit 1
+          fi
+
+          sha=$(git rev-parse -q --verify "origin/$REF^{commit}" || git rev-parse -q --verify "$REF^{commit}") \
+            || { echo "::error::Unknown ref '$REF'"; exit 1; }
+          echo "SHA=$sha" >> "$GITHUB_ENV"
+
+      - name: Extract release notes from CHANGELOG.md
+        run: |
+          awk -v header="## [$VERSION]" '
+            index($0, header) == 1 { found = 1; next }
+            found && (/^## \[/ || /^\[[^]]+\]: /) { exit }
+            found { print }
+          ' CHANGELOG.md \
+            | sed -e '/./,$!d' \
+            | sed -E "s#\]\(([A-Za-z0-9_.-]+\.md)(\#[^)]*)?\)#](https://github.com/$GITHUB_REPOSITORY/blob/$TAG/\1\2)#g" \
+            > notes.md
+
+          [[ -s notes.md ]] || { echo "::error::No '## [$VERSION]' section in CHANGELOG.md"; exit 1; }
+          cat notes.md
+
+      - name: Create tag
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git tag -a "$TAG" "$SHA" -m "$TAG"
+          git push origin "refs/tags/$TAG"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LATEST: ${{ inputs.latest }}
+        run: |
+          flags=()
+          if [[ "$VERSION" == *-* ]]; then
+            flags+=(--prerelease --latest=false)
+          else
+            flags+=(--latest="$LATEST")
+          fi
+
+          gh release create "$TAG" --verify-tag --title "$TAG" --notes-file notes.md "${flags[@]}"
