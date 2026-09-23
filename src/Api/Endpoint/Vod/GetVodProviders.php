@@ -2,12 +2,11 @@
 
 declare(strict_types=1);
 
-namespace NSolutions\Filmweb\Api\Endpoint;
+namespace NSolutions\Filmweb\Api\Endpoint\Vod;
 
 use NSolutions\Filmweb\Api\Endpoint;
 use NSolutions\Filmweb\Model\VodProvider;
 use NSolutions\Filmweb\Support\Data;
-use NSolutions\Filmweb\Support\ImageUrls;
 
 /**
  * `GET /vod/providers/list` – dictionary of streaming services (Netflix, HBO Max…).
@@ -29,17 +28,17 @@ final readonly class GetVodProviders implements Endpoint
     /**
      * @return array<int, VodProvider> keyed by provider ID
      */
-    public function map(Data $data, ImageUrls $images): array
+    public function map(Data $data): array
     {
         $providers = [];
 
-        foreach ($data->items() as $provider) {
-            $id = $provider->int('id');
-            $providers[$id] = new VodProvider(
-                id: $id,
-                name: $provider->nullableString('displayName') ?? $provider->string('name'),
-                url: $provider->nullableString('link'),
+        foreach ($data->items() as $item) {
+            $provider = new VodProvider(
+                id: $item->int('id'),
+                name: $item->nullableString('displayName') ?? $item->string('name'),
+                url: $item->nullableString('link'),
             );
+            $providers[$provider->id] = $provider;
         }
 
         return $providers;

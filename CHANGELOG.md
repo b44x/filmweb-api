@@ -7,17 +7,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/pl/1.1.0/), wersjonowanie:
 Całkowite przepisanie biblioteki. Wersja **nie jest wstecznie kompatybilna** – zobacz [UPGRADE.md](UPGRADE.md).
 
 ### Dodano
-- Obsługa nowego REST API `https://www.filmweb.pl/api/v1` (stare mobilne API `ssl.filmweb.pl/api` przestało działać).
-- Wyszukiwarka (`search()`), zbiorcze `film()`, osobne `info()`, `preview()` (gatunki, kraje, czas trwania, plakat), `description()`,
-  `rating()` (z rozkładem głosów), `criticsRating()`, `dates()` (premiery).
-- Obsada: `topRoles()`, `topCast()` oraz osoby: `person()`.
-- Gdzie obejrzeć: `whereToWatch()` (aktywne oferty VOD z cenami) i `vodProviders()`.
-- Surowy dostęp do dowolnej ścieżki API: `raw()`; własne endpointy przez `call()`.
-- Wymaganie PHP `^8.2`, `declare(strict_types=1)` i pełne typowanie; autoloading PSR-4 (`NSolutions\Filmweb\`).
-- Niemutowalne modele (`readonly`): `Film`, `TitleInfo`, `Preview`, `Genre`, `Rating`, `ReleaseDates`, `TopRole`, `CastMember`,
-  `Person`, `PersonRef`, `VodProvider`, `VodOffer`, `SearchHit`; enum `TitleType`.
-- Warstwa transportu `Transport` z implementacjami `CurlTransport` i `Psr18Transport`.
-- Hierarchia wyjątków implementujących `FilmwebException`.
+- Obsługa REST API `https://www.filmweb.pl/api/v1` (stare mobilne API `ssl.filmweb.pl/api` przestało działać).
+- Zasoby: `films` (`get`, `info`, `preview`, `description`, `rating`, `criticsRating`, `dates`, `topRoles`, `cast`),
+  `people` (`get`), `vod` (`providers`, `offers`) oraz `search()`, `call()` i `raw()`.
+- Obsługa seriali (te same endpointy) i kanoniczne linki `TitleInfo::url()`.
+- Dekoratory transportu: `RetryingTransport` (429/5xx, exponential backoff) i `CachingTransport` (PSR-16).
+- Value object `Image` (CDN fwcdn.pl, wybór rozmiaru), niemutowalne modele `readonly`, enumy `TitleType`, `ImageKind`.
+- Wymaganie PHP `^8.2`, `declare(strict_types=1)`, autoloading PSR-4 (`NSolutions\Filmweb\`).
+- `CurlTransport` i `Psr18Transport`, hierarchia wyjątków `FilmwebException`.
 - Testy (PHPUnit 11), PHPStan (level max + strict rules), PHP-CS-Fixer (PER-CS 2.0), GitHub Actions.
 
 ### Usunięto

@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace NSolutions\Filmweb\Api;
 
+use NSolutions\Filmweb\Exception\UnexpectedResponseException;
 use NSolutions\Filmweb\Support\Data;
-use NSolutions\Filmweb\Support\ImageUrls;
 
 /**
- * A single GET endpoint of the Filmweb API: knows its path and how to map the JSON response.
+ * A single GET endpoint of the Filmweb API: describes the request and maps the JSON response.
  *
- * Implement it to support endpoints not covered by the library and run them
+ * Implement it to support endpoints not covered by the library and run it
  * with {@see \NSolutions\Filmweb\Filmweb::call()}.
  *
  * @template-covariant TResult
@@ -29,6 +29,8 @@ interface Endpoint
 
     /**
      * @return TResult
+     *
+     * @throws UnexpectedResponseException when the payload does not have the expected shape
      */
-    public function map(Data $data, ImageUrls $images): mixed;
+    public function map(Data $data): mixed;
 }

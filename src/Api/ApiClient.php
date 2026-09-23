@@ -11,23 +11,18 @@ use NSolutions\Filmweb\Exception\FilmwebException;
 use NSolutions\Filmweb\Exception\UnexpectedResponseException;
 use NSolutions\Filmweb\Http\Transport;
 use NSolutions\Filmweb\Support\Data;
-use NSolutions\Filmweb\Support\ImageUrls;
 
 /**
  * Low-level client: builds the URL, sends the request, decodes JSON and maps it.
  */
 final readonly class ApiClient
 {
-    private const NOT_FOUND = 404;
-
-    private ImageUrls $images;
+    private const HTTP_NOT_FOUND = 404;
 
     public function __construct(
         private Transport $transport,
         private Config $config = new Config(),
-    ) {
-        $this->images = new ImageUrls($config->cdnUrl);
-    }
+    ) {}
 
     /**
      * @template TResult
@@ -42,7 +37,7 @@ final readonly class ApiClient
     {
         $data = $this->fetch($endpoint->path(), $endpoint->query());
 
-        return $data === null ? null : $endpoint->map($data, $this->images);
+        return $data === null ? null : $endpoint->map($data);
     }
 
     /**
@@ -54,19 +49,14 @@ final readonly class ApiClient
      */
     public function fetch(string $path, array $query = []): ?Data
     {
-        $url = rtrim($this->config->baseUrl, '/') . '/' . ltrim($path, '/');
-
-        if ($query !== []) {
-            $url .= '?' . http_build_query($query, '', '&', PHP_QUERY_RFC3986);
-        }
-
+        $url = $this->url($path, $query);
         $response = $this->transport->get($url, [
             'Accept' => 'application/json',
             'User-Agent' => $this->config->userAgent,
             'x-locale' => $this->config->locale,
         ]);
 
-        if ($response->status === self::NOT_FOUND) {
+        if ($response->status === self::HTTP_NOT_FOUND) {
             return null;
         }
 
@@ -79,5 +69,15 @@ final readonly class ApiClient
         } catch (JsonException $e) {
             throw new UnexpectedResponseException(\sprintf('Invalid JSON received from %s: %s', $url, $e->getMessage()), previous: $e);
         }
+    }
+
+    /**
+     * @param array<string, string> $query
+     */
+    private function url(string $path, array $query): string
+    {
+        $url = rtrim($this->config->baseUrl, '/') . '/' . ltrim($path, '/');
+
+        return $query === [] ? $url : $url . '?' . http_build_query($query, '', '&', PHP_QUERY_RFC3986);
     }
 }

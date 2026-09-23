@@ -143,6 +143,18 @@ final readonly class Data
     }
 
     /**
+     * List of integers, e.g. `[628, 1012]`; non-integer items are skipped.
+     *
+     * @return list<int>
+     */
+    public function ints(string $path): array
+    {
+        $value = $this->get($path);
+
+        return \is_array($value) ? array_values(array_filter($value, \is_int(...))) : [];
+    }
+
+    /**
      * Items of a top-level JSON list.
      *
      * @return list<self>

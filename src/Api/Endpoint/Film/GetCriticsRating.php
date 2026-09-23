@@ -2,11 +2,10 @@
 
 declare(strict_types=1);
 
-namespace NSolutions\Filmweb\Api\Endpoint;
+namespace NSolutions\Filmweb\Api\Endpoint\Film;
 
 use NSolutions\Filmweb\Model\Rating;
 use NSolutions\Filmweb\Support\Data;
-use NSolutions\Filmweb\Support\ImageUrls;
 
 /**
  * `GET /film/{id}/critics/rating` – critics' average rating.
@@ -20,7 +19,7 @@ final readonly class GetCriticsRating extends FilmEndpoint
         return 'critics/rating';
     }
 
-    public function map(Data $data, ImageUrls $images): Rating
+    public function map(Data $data): Rating
     {
         return new Rating(
             average: $data->nullableFloat('rate') ?? 0.0,

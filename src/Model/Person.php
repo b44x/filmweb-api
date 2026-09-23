@@ -20,6 +20,6 @@ final readonly class Person
         public ?int $height,
         public ?string $mainProfession,
         public array $knownFor,
-        public ?string $photoUrl,
+        public ?Image $photo,
     ) {}
 }

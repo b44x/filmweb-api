@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace NSolutions\Filmweb\Model;
 
-final readonly class Preview
+final readonly class FilmPreview
 {
     /**
      * @param list<Genre>     $genres
      * @param list<string>    $countries ISO 3166-1 alpha-2 codes, e.g. `["US", "GB"]`
-     * @param list<PersonRef> $mainCast
      * @param list<PersonRef> $directors
+     * @param list<PersonRef> $mainCast
      */
     public function __construct(
         public int $id,
@@ -21,8 +21,9 @@ final readonly class Preview
         public array $genres,
         public array $countries,
         public ?string $synopsis,
-        public ?string $posterUrl,
-        public array $mainCast,
+        public ?Image $poster,
         public array $directors,
+        public array $mainCast,
+        public bool $recommended = false,
     ) {}
 }

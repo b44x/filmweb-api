@@ -2,10 +2,9 @@
 
 declare(strict_types=1);
 
-namespace NSolutions\Filmweb\Api\Endpoint;
+namespace NSolutions\Filmweb\Api\Endpoint\Film;
 
 use NSolutions\Filmweb\Support\Data;
-use NSolutions\Filmweb\Support\ImageUrls;
 use NSolutions\Filmweb\Support\Markup;
 
 /**
@@ -20,7 +19,7 @@ final readonly class GetFilmDescription extends FilmEndpoint
         return 'description';
     }
 
-    public function map(Data $data, ImageUrls $images): ?string
+    public function map(Data $data): ?string
     {
         return Markup::toPlainText($data->nullableString('synopsis'));
     }

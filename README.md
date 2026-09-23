@@ -11,41 +11,43 @@ tego samego, z którego korzysta strona filmweb.pl.
 ```php
 $filmweb = Filmweb::create();
 
-$hit  = $filmweb->search('matrix')[0];   // SearchHit { id: 628, title: "Matrix", type: "film" }
-$film = $filmweb->film($hit->id);
+$hit  = $filmweb->search('matrix')[0];        // SearchHit { id: 628, title: "Matrix", type: "film" }
+$film = $filmweb->films->get($hit->id);
 
 echo "{$film->info->title} ({$film->info->year}) – ★ {$film->rating?->rounded()}";
 // Matrix (1999) – ★ 7.6
 ```
 
 > [!NOTE]
-> To jest **2.x** – przepisana od zera wersja dla PHP 8.2+, oparta na nowym REST API.
+> To jest **2.x** – przepisana od zera wersja dla PHP 8.2+, oparta na REST API strony.
 > Stare mobilne API (`ssl.filmweb.pl/api`), z którego korzystała wersja 1.x, **już nie działa**.
 > Wersja legacy (PHP 5.4) jest dostępna pod tagiem [`v1.0.0`](https://github.com/b44x/filmweb-api/tree/v1.0.0). Przechodzisz z 1.x? Zobacz [UPGRADE.md](UPGRADE.md).
 
 > [!WARNING]
 > API nie jest oficjalnie udokumentowane ani wspierane przez Filmweb – może zmienić się bez ostrzeżenia.
-> Korzystaj z niego zgodnie z regulaminem serwisu i nie zasypuj go zapytaniami.
+> Korzystaj z niego zgodnie z regulaminem serwisu i nie zasypuj go zapytaniami (patrz [cache](#cache-i-ponawianie)).
 
 ## Spis treści
 
 - [Cechy](#cechy)
 - [Instalacja](#instalacja)
 - [Użycie](#użycie)
-- [Dostępne metody](#dostępne-metody)
+- [API](#api)
 - [Obsługa błędów](#obsługa-błędów)
-- [Konfiguracja i transport HTTP](#konfiguracja-i-transport-http)
+- [Transport HTTP](#transport-http)
 - [Własne endpointy](#własne-endpointy)
 - [Architektura](#architektura)
 - [Development](#development)
 
 ## Cechy
 
-- **PHP 8.2+** – klasy `readonly`, enumy, named arguments, `strict_types` wszędzie.
-- **Typowane modele zamiast tablic** – `Film`, `Preview`, `Rating`, `Person`, `VodOffer`… z podpowiadaniem w IDE.
-- **Zero zależności runtime** poza interfejsami PSR – domyślnie działa na `ext-curl`.
-- **PSR-18 ready** – podepnij Guzzle, Symfony HttpClient albo dowolny inny klient.
-- **Rozszerzalne** – nowy endpoint to jedna klasa; do tego surowy dostęp `raw()` do dowolnej ścieżki API.
+- **PHP 8.2+** – klasy `readonly`, enumy, named arguments, generyki w PHPDoc, `strict_types` wszędzie.
+- **Zasoby jak w nowoczesnych SDK** – `$filmweb->films`, `$filmweb->people`, `$filmweb->vod`.
+- **Typowane modele** – `Film`, `FilmPreview`, `Rating`, `Person`, `VodOffer`… zamiast tablic.
+- **Filmy i seriale** – te same endpointy, poprawne linki (`/film/…`, `/serial/…`).
+- **Odporność** – dekoratory `RetryingTransport` (429/5xx, exponential backoff) i `CachingTransport` (PSR-16).
+- **Zero zależności runtime** poza interfejsami PSR – domyślnie `ext-curl`, opcjonalnie dowolny klient PSR-18.
+- **Rozszerzalne** – nowy endpoint to jedna klasa; `raw()` daje surowy dostęp do dowolnej ścieżki.
 - **Przetestowane** – PHPUnit na prawdziwych odpowiedziach API, PHPStan `level: max` + strict rules, PER-CS 2.0, CI na PHP 8.2–8.5.
 
 ## Instalacja
@@ -61,124 +63,109 @@ Wymagania: PHP `^8.2`, `ext-json` oraz `ext-curl` (dla domyślnego transportu).
 ### Wyszukiwanie
 
 ```php
-foreach ($filmweb->search('matrix') as $hit) {
-    echo "#{$hit->id} [{$hit->type}] {$hit->title}\n";   // #628 [film] Matrix
+foreach ($filmweb->search('gra o tron') as $hit) {
+    echo "#{$hit->id} [{$hit->type}] {$hit->title}\n";   // #476848 [serial] Gra o tron
 }
-
-$hit->titleType();  // TitleType::Film | Serial | Game | null (np. dla osób)
-$hit->mainCast;     // list<PersonRef>
 ```
 
-### Wszystko o filmie naraz
-
-`film()` łączy pięć endpointów (info, preview, oceny użytkowników i krytyków, daty premier):
+### Film lub serial
 
 ```php
-$film = $filmweb->film(500891); // ?Film – null, gdy tytuł nie istnieje
+$film = $filmweb->films->get(500891);   // ?Film – info, preview, oceny i daty (5 zapytań)
 
-$film->info->title;                          // "Incepcja"
-$film->info->type;                           // TitleType::Film
-$film->preview?->originalTitle;              // "Inception"
-$film->preview?->duration;                   // 148 (minuty)
-$film->preview?->genres;                     // [Genre(10, "Surrealistyczny"), Genre(24, "Thriller"), …]
-$film->preview?->countries;                  // ["US", "GB"]
-$film->preview?->directors;                  // [PersonRef(40896, "Christopher Nolan")]
-$film->preview?->mainCast;                   // [PersonRef(30, "Leonardo DiCaprio"), …]
-$film->preview?->posterUrl;                  // "https://fwcdn.pl/fpo/08/91/500891/7354571_1.6.jpg"
-$film->rating?->rounded();                   // średnia użytkowników, np. 7.6
-$film->rating?->distribution;                // [1 => …, 10 => …]
-$film->criticsRating?->average;              // średnia krytyków
-$film->dates?->worldPremiere?->date;         // DateTimeImmutable 2010-07-08 (GB)
-$film->dates?->countryRelease?->date;        // DateTimeImmutable 2010-07-30 (PL)
+$film->info->title;                      // "Incepcja"
+$film->info->type;                       // TitleType::Film
+$film->info->url();                      // "https://www.filmweb.pl/film/Incepcja-2010-500891"
+$film->info->poster?->url();             // "https://fwcdn.pl/fpo/08/91/500891/7354571_1.3.jpg"
+
+$film->preview?->genres;                 // [Genre(10, "Surrealistyczny"), Genre(24, "Thriller"), …]
+$film->preview?->countries;              // ["US", "GB"]
+$film->preview?->duration;               // 148
+$film->preview?->directors;              // [PersonRef(40896, "Christopher Nolan")]
+$film->preview?->synopsis;               // krótki opis
+
+$film->rating?->rounded();               // średnia użytkowników
+$film->rating?->distribution;            // [1 => …, 10 => …]
+$film->criticsRating?->average;          // średnia krytyków
+$film->dates?->countryRelease?->date;    // DateTimeImmutable 2010-07-30 (PL)
 ```
+
+Potrzebujesz tylko części danych? Każdy element ma własną metodę, np. `$filmweb->films->rating(628)`.
 
 ### Obsada i osoby
 
 ```php
-foreach ($filmweb->topCast(500891, limit: 5) as $member) {
+foreach ($filmweb->films->cast(476848, limit: 5) as $member) {
     printf("%s – ocena roli %.1f\n", $member->person?->name, $member->role->rating);
 }
+// Peter Dinklage – ocena roli 9.6 …
 
-$person = $filmweb->person(87);
-$person->realName;   // "Keanu Charles Reeves"
-$person->birthDate;  // DateTimeImmutable 1964-09-02
-$person->knownFor;   // [628, 1012, …] – ID tytułów
+$person = $filmweb->people->get(87);
+$person->realName;    // "Keanu Charles Reeves"
+$person->birthDate;   // DateTimeImmutable 1964-09-02
+$person->knownFor;    // [628, 1012, …] – ID tytułów
 ```
 
-`topCast()` wykonuje 1 + `$limit` zapytań (lista ról zawiera tylko ID osób) – `topRoles()` zwraca same role.
-
-### Gdzie obejrzeć (VOD)
+### Gdzie obejrzeć
 
 ```php
-foreach ($filmweb->whereToWatch(500891) as $offer) {
+foreach ($filmweb->vod->offers(500891) as $offer) {
     echo $offer->provider?->name, ': ', match (true) {
         $offer->subscription => 'w abonamencie',
         $offer->free => 'za darmo',
-        default => sprintf('wypożyczenie %.2f zł / zakup %.2f zł', $offer->rentPrice, $offer->buyPrice),
-    }, " – {$offer->url}\n";
+        default => "wypożyczenie {$offer->rentPrice} zł / zakup {$offer->buyPrice} zł",
+    }, "\n";
 }
 ```
 
-Zwracane są tylko oferty aktywne w danej chwili (drugi argument pozwala podać inną datę).
-
-### Pojedyncze endpointy
-
-```php
-$filmweb->info(628);           // ?TitleInfo – działa też dla seriali i gier
-$filmweb->preview(628);        // ?Preview
-$filmweb->description(628);    // ?string – pełny opis, bez znaczników [person=…]
-$filmweb->rating(628);         // ?Rating
-$filmweb->criticsRating(628);  // ?Rating
-$filmweb->dates(628);          // ?ReleaseDates
-$filmweb->topRoles(628);       // list<TopRole>
-$filmweb->vodProviders();      // array<int, VodProvider>
-```
+Zwracane są tylko oferty aktywne w danej chwili; słownik serwisów pobierany jest raz na instancję.
 
 Więcej w katalogu [`examples/`](examples).
 
-## Dostępne metody
+## API
 
-| Metoda | Zwraca | Endpoint |
+`null` (lub pusta lista) oznacza, że Filmweb zwrócił **404** – to nie jest błąd.
+
+| Wywołanie | Zwraca | Endpoint |
 |---|---|---|
-| `search(string $query)` | `list<SearchHit>` | `GET /live/search?query=…` |
-| `film(int $id)` | `?Film` | info + preview + rating + critics/rating + dates |
-| `info(int $id)` | `?TitleInfo` | `GET /title/{id}/info` |
-| `preview(int $id)` | `?Preview` | `GET /film/{id}/preview` |
-| `description(int $id)` | `?string` | `GET /film/{id}/description` |
-| `rating(int $id)` | `?Rating` | `GET /film/{id}/rating` |
-| `criticsRating(int $id)` | `?Rating` | `GET /film/{id}/critics/rating` |
-| `dates(int $id)` | `?ReleaseDates` | `GET /film/{id}/dates` |
-| `topRoles(int $id)` | `list<TopRole>` | `GET /film/{id}/top-roles` |
-| `topCast(int $id, int $limit = 10)` | `list<CastMember>` | top-roles + `GET /person/{id}/preview` × limit |
-| `person(int $id)` | `?Person` | `GET /person/{id}/preview` |
-| `vodProviders()` | `array<int, VodProvider>` | `GET /vod/providers/list` |
-| `whereToWatch(int $id, ?DateTimeImmutable $at = null)` | `list<VodOffer>` | providers + `GET /vod/film/{id}/providers/list` |
+| `search(string $query)` | `list<SearchHit>` | `/live/search?query=…` |
+| `films->get(int $id)` | `?Film` | info + preview + rating + critics/rating + dates |
+| `films->info(int $id)` | `?TitleInfo` | `/title/{id}/info` |
+| `films->preview(int $id)` | `?FilmPreview` | `/film/{id}/preview` |
+| `films->description(int $id)` | `?string` | `/film/{id}/description` |
+| `films->rating(int $id)` | `?Rating` | `/film/{id}/rating` |
+| `films->criticsRating(int $id)` | `?Rating` | `/film/{id}/critics/rating` |
+| `films->dates(int $id)` | `?ReleaseDates` | `/film/{id}/dates` |
+| `films->topRoles(int $id)` | `list<TopRole>` | `/film/{id}/top-roles` |
+| `films->cast(int $id, int $limit = 10)` | `list<CastMember>` | top-roles + `/person/{id}/preview` × limit |
+| `people->get(int $id)` | `?Person` | `/person/{id}/preview` |
+| `vod->providers()` | `array<int, VodProvider>` | `/vod/providers/list` |
+| `vod->offers(int $id, ?DateTimeImmutable $at = null)` | `list<VodOffer>` | providers + `/vod/film/{id}/providers/list` |
 | `call(Endpoint $endpoint)` | zależnie od endpointu | dowolny |
 | `raw(string $path, array $query = [])` | `?Data` | dowolna ścieżka |
 
-`null` oznacza, że Filmweb zwrócił **404** – to nie jest błąd.
-
 ## Obsługa błędów
 
-Każdy wyjątek rzucany przez bibliotekę implementuje `NSolutions\Filmweb\Exception\FilmwebException`:
+Każdy wyjątek biblioteki implementuje `NSolutions\Filmweb\Exception\FilmwebException`:
 
 | Wyjątek | Kiedy |
 |---|---|
 | `TransportException` | błąd sieci: DNS, połączenie, TLS, timeout |
 | `ApiException` | status HTTP inny niż 2xx/404 (np. `429`, `5xx`) – kod w `$e->status()` |
 | `UnexpectedResponseException` | odpowiedź to nie JSON albo brakuje wymaganych pól |
+| `InvalidArgumentException` | niepoprawny argument, np. pusta fraza wyszukiwania |
 
 ```php
-use NSolutions\Filmweb\Exception\FilmwebException;
-
 try {
-    $film = $filmweb->film(628);
+    $film = $filmweb->films->get(628);
 } catch (FilmwebException $e) {
     $logger->error('Filmweb unavailable', ['exception' => $e]);
 }
 ```
 
-## Konfiguracja i transport HTTP
+## Transport HTTP
+
+### Konfiguracja
 
 ```php
 use NSolutions\Filmweb\Config;
@@ -186,13 +173,29 @@ use NSolutions\Filmweb\Http\CurlTransport;
 
 $filmweb = Filmweb::create(
     new CurlTransport(timeout: 10, connectTimeout: 5),
-    new Config(
-        locale: 'pl_PL',              // nagłówek x-locale
-        userAgent: 'MyApp/1.0',
-        cdnUrl: 'https://fwcdn.pl',
-    ),
+    new Config(locale: 'pl_PL', userAgent: 'MyApp/1.0'),
 );
 ```
+
+### Cache i ponawianie
+
+Transporty to dekoratory – składasz je jak klocki:
+
+```php
+use NSolutions\Filmweb\Http\CachingTransport;
+use NSolutions\Filmweb\Http\RetryingTransport;
+
+$transport = new CachingTransport(
+    new RetryingTransport(new CurlTransport(), maxRetries: 3, baseDelayMs: 500),
+    $psr16Cache,          // np. symfony/cache Psr16Cache, Laravel Cache::store()
+    ttl: 3600,
+);
+
+$filmweb = Filmweb::create($transport);
+```
+
+`RetryingTransport` ponawia błędy sieci, `429` i `5xx` (500 ms → 1 s → 2 s…),
+`CachingTransport` zapamiętuje odpowiedzi `2xx` i `404`.
 
 ### Dowolny klient PSR-18
 
@@ -204,61 +207,72 @@ use NSolutions\Filmweb\Http\Psr18Transport;
 $filmweb = Filmweb::create(new Psr18Transport(new Client(), new HttpFactory()));
 ```
 
-Potrzebujesz cache, retry albo rate-limitingu? Zaimplementuj `Transport` jako dekorator – to jedna metoda `get()`.
-
 ## Własne endpointy
 
-API ma więcej endpointów niż te opakowane w bibliotece. Najpierw podejrzyj odpowiedź:
+API ma więcej ścieżek niż te opakowane w bibliotece (np. `/film/{id}/votes/popular`, `/users/{name}/id`).
+Najpierw podejrzyj odpowiedź:
 
 ```php
-print_r($filmweb->raw('/film/628/info')?->toArray());
+print_r($filmweb->raw('/users/Shadow_filmweb/id')?->toArray());
+// ['name' => 'Shadow_filmweb', 'userId' => 1681862]
 ```
 
-…a potem dodaj typowany endpoint bez modyfikowania biblioteki (Open/Closed):
+…a potem dodaj typowany endpoint – bez modyfikowania biblioteki:
 
 ```php
-use NSolutions\Filmweb\Api\Endpoint\FilmEndpoint;
+use NSolutions\Filmweb\Api\Endpoint;
 use NSolutions\Filmweb\Support\Data;
-use NSolutions\Filmweb\Support\ImageUrls;
 
-/** @extends FilmEndpoint<string> */
-final readonly class GetFilmSubType extends FilmEndpoint
+/** @implements Endpoint<int> */
+final readonly class GetUserId implements Endpoint
 {
-    protected function resource(): string
+    public function __construct(private string $username) {}
+
+    public function path(): string
     {
-        return 'info';                 // GET /film/{id}/info
+        return '/users/' . rawurlencode($this->username) . '/id';
     }
 
-    public function map(Data $data, ImageUrls $images): string
+    public function query(): array
     {
-        return $data->string('subType');
+        return [];
+    }
+
+    public function map(Data $data): int
+    {
+        return $data->int('userId');
     }
 }
 
-$filmweb->call(new GetFilmSubType(628)); // "film_cinema"
+$filmweb->call(new GetUserId('Shadow_filmweb')); // 1681862
 ```
 
+Dla ścieżek `/film/{id}/…` wystarczy rozszerzyć `FilmEndpoint` i podać `resource()`.
 `Data` daje typowany dostęp do JSON-a, także po ścieżkach: `$data->nullableString('plot.synopsis')`.
 
 ## Architektura
 
 ```
 src/
-├── Filmweb.php               # fasada – publiczne, typowane API
-├── Config.php                # niemutowalna konfiguracja
+├── Filmweb.php                 # punkt wejścia: search(), call(), raw() + zasoby
+├── Config.php                  # niemutowalna konfiguracja (base URL, locale, User-Agent)
+├── Resource/                   # FilmResource, PersonResource, VodResource – API dla użytkownika
 ├── Api/
-│   ├── ApiClient.php         # URL → GET → JSON → mapowanie, 404 → null
-│   ├── Endpoint.php          # kontrakt endpointu (generyczny, @template)
-│   └── Endpoint/             # po jednej klasie na endpoint + FilmEndpoint (baza /film/{id}/…)
-├── Http/                     # Transport, Response, CurlTransport, Psr18Transport
-├── Model/                    # readonly DTO (Film, Preview, Person, VodOffer…) + enum TitleType
-├── Support/                  # Data (typowany JSON), ImageUrls, Markup
-└── Exception/                # FilmwebException + implementacje
+│   ├── ApiClient.php           # URL → GET → JSON → Endpoint::map(), 404 → null
+│   ├── Endpoint.php            # kontrakt endpointu (generyczny: Endpoint<TResult>)
+│   ├── Endpoint/               # Film/, Person/, Title/, Vod/, Search/ – po klasie na endpoint
+│   └── Mapping/                # wspólne mapowania
+├── Http/                       # Transport + Curl/Psr18 + dekoratory Retrying/Caching
+├── Model/                      # readonly DTO, value object Image, enumy
+├── Support/                    # Data (typowany JSON), Markup
+└── Exception/                  # FilmwebException + implementacje
 ```
 
-Każda warstwa ma jedną odpowiedzialność i zależy od abstrakcji (`Transport`, `Endpoint`),
-więc w testach podmieniasz tylko transport – zobacz `tests/Fixtures/FakeTransport.php`
-i prawdziwe odpowiedzi API w `tests/Fixtures/responses/`.
+- **Zasoby** grupują operacje domenowo i ukrywają liczbę zapytań (np. `films->get()` = 5 endpointów).
+- **Endpointy** są małe i niezależne: opisują ścieżkę i mapują odpowiedź – nic więcej (SRP, OCP).
+- **Transport** to jedna metoda `get()`; retry i cache są dekoratorami, nie flagami w kliencie.
+- Testy podmieniają tylko transport (`tests/Fixtures/FakeTransport.php`) i używają prawdziwych odpowiedzi API
+  z `tests/Fixtures/responses/`.
 
 ## Development
 

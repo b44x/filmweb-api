@@ -2,17 +2,20 @@
 
 declare(strict_types=1);
 
-namespace NSolutions\Filmweb\Api\Endpoint;
+namespace NSolutions\Filmweb\Api\Mapping;
 
 use NSolutions\Filmweb\Model\PersonRef;
 use NSolutions\Filmweb\Support\Data;
 
-trait MapsPeople
+/**
+ * Maps `[{"id": 87, "name": "Keanu Reeves"}, …]` lists shared by several endpoints.
+ */
+final class PersonRefMapper
 {
     /**
      * @return list<PersonRef>
      */
-    private function people(Data $data, string $path): array
+    public static function list(Data $data, string $path): array
     {
         return array_map(
             static fn(Data $person): PersonRef => new PersonRef($person->int('id'), $person->string('name')),

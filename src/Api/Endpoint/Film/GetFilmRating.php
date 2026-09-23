@@ -2,11 +2,10 @@
 
 declare(strict_types=1);
 
-namespace NSolutions\Filmweb\Api\Endpoint;
+namespace NSolutions\Filmweb\Api\Endpoint\Film;
 
 use NSolutions\Filmweb\Model\Rating;
 use NSolutions\Filmweb\Support\Data;
-use NSolutions\Filmweb\Support\ImageUrls;
 
 /**
  * `GET /film/{id}/rating` – users' rating with the 1–10 vote distribution.
@@ -20,7 +19,7 @@ final readonly class GetFilmRating extends FilmEndpoint
         return 'rating';
     }
 
-    public function map(Data $data, ImageUrls $images): Rating
+    public function map(Data $data): Rating
     {
         $distribution = [];
 

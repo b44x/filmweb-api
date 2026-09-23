@@ -10,7 +10,6 @@ use NSolutions\Filmweb\Exception\ApiException;
 use NSolutions\Filmweb\Exception\UnexpectedResponseException;
 use NSolutions\Filmweb\Http\Response;
 use NSolutions\Filmweb\Support\Data;
-use NSolutions\Filmweb\Support\ImageUrls;
 use NSolutions\Filmweb\Tests\Fixtures\FakeTransport;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -19,7 +18,6 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ApiClient::class)]
 #[UsesClass(Config::class)]
 #[UsesClass(Data::class)]
-#[UsesClass(ImageUrls::class)]
 #[UsesClass(Response::class)]
 final class ApiClientTest extends TestCase
 {

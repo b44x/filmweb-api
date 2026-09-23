@@ -2,13 +2,14 @@
 
 declare(strict_types=1);
 
-namespace NSolutions\Filmweb\Api\Endpoint;
+namespace NSolutions\Filmweb\Api\Endpoint\Title;
 
 use NSolutions\Filmweb\Api\Endpoint;
+use NSolutions\Filmweb\Model\Image;
+use NSolutions\Filmweb\Model\ImageKind;
 use NSolutions\Filmweb\Model\TitleInfo;
 use NSolutions\Filmweb\Model\TitleType;
 use NSolutions\Filmweb\Support\Data;
-use NSolutions\Filmweb\Support\ImageUrls;
 
 /**
  * `GET /title/{id}/info` – works for films, series and games.
@@ -29,7 +30,7 @@ final readonly class GetTitleInfo implements Endpoint
         return [];
     }
 
-    public function map(Data $data, ImageUrls $images): TitleInfo
+    public function map(Data $data): TitleInfo
     {
         $type = $data->nullableString('type');
 
@@ -40,7 +41,7 @@ final readonly class GetTitleInfo implements Endpoint
             year: $data->nullableInt('year'),
             type: $type === null ? null : TitleType::tryFrom($type),
             subType: $data->nullableString('subType'),
-            posterUrl: $images->poster($data->nullableString('posterPath')),
+            poster: Image::tryFrom(ImageKind::Poster, $data->nullableString('posterPath')),
         );
     }
 }

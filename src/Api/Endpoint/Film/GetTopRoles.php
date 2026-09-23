@@ -2,14 +2,13 @@
 
 declare(strict_types=1);
 
-namespace NSolutions\Filmweb\Api\Endpoint;
+namespace NSolutions\Filmweb\Api\Endpoint\Film;
 
 use NSolutions\Filmweb\Model\TopRole;
 use NSolutions\Filmweb\Support\Data;
-use NSolutions\Filmweb\Support\ImageUrls;
 
 /**
- * `GET /film/{id}/top-roles` – best rated roles (person IDs only, see {@see GetPerson}).
+ * `GET /film/{id}/top-roles` – best rated roles (person IDs only).
  *
  * @extends FilmEndpoint<list<TopRole>>
  */
@@ -23,7 +22,7 @@ final readonly class GetTopRoles extends FilmEndpoint
     /**
      * @return list<TopRole>
      */
-    public function map(Data $data, ImageUrls $images): array
+    public function map(Data $data): array
     {
         return array_map(
             static fn(Data $role): TopRole => new TopRole(

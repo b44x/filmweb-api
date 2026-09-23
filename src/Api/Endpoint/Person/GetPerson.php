@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-namespace NSolutions\Filmweb\Api\Endpoint;
+namespace NSolutions\Filmweb\Api\Endpoint\Person;
 
 use NSolutions\Filmweb\Api\Endpoint;
+use NSolutions\Filmweb\Model\Image;
+use NSolutions\Filmweb\Model\ImageKind;
 use NSolutions\Filmweb\Model\Person;
 use NSolutions\Filmweb\Support\Data;
-use NSolutions\Filmweb\Support\ImageUrls;
 
 /**
  * `GET /person/{id}/preview` – name, birth date and place, height, best known titles.
@@ -28,10 +29,8 @@ final readonly class GetPerson implements Endpoint
         return [];
     }
 
-    public function map(Data $data, ImageUrls $images): Person
+    public function map(Data $data): Person
     {
-        $knownFor = $data->get('filmsKnownFor');
-
         return new Person(
             id: $data->nullableInt('id') ?? $this->personId,
             name: $data->string('name'),
@@ -40,8 +39,8 @@ final readonly class GetPerson implements Endpoint
             birthPlace: $data->nullableString('birthplace.cityName'),
             height: $data->nullableInt('info.height'),
             mainProfession: $data->nullableString('mainProfession'),
-            knownFor: \is_array($knownFor) ? array_values(array_filter($knownFor, \is_int(...))) : [],
-            photoUrl: $images->person($data->nullableString('poster.path')),
+            knownFor: $data->ints('filmsKnownFor'),
+            photo: Image::tryFrom(ImageKind::Person, $data->nullableString('poster.path')),
         );
     }
 }

@@ -2,31 +2,31 @@
 
 declare(strict_types=1);
 
-namespace NSolutions\Filmweb\Api\Endpoint;
+namespace NSolutions\Filmweb\Api\Endpoint\Film;
 
+use NSolutions\Filmweb\Api\Mapping\PersonRefMapper;
+use NSolutions\Filmweb\Model\FilmPreview;
 use NSolutions\Filmweb\Model\Genre;
-use NSolutions\Filmweb\Model\Preview;
+use NSolutions\Filmweb\Model\Image;
+use NSolutions\Filmweb\Model\ImageKind;
 use NSolutions\Filmweb\Support\Data;
-use NSolutions\Filmweb\Support\ImageUrls;
 use NSolutions\Filmweb\Support\Markup;
 
 /**
  * `GET /film/{id}/preview` – titles, genres, countries, duration, synopsis, directors and main cast.
  *
- * @extends FilmEndpoint<Preview>
+ * @extends FilmEndpoint<FilmPreview>
  */
 final readonly class GetFilmPreview extends FilmEndpoint
 {
-    use MapsPeople;
-
     protected function resource(): string
     {
         return 'preview';
     }
 
-    public function map(Data $data, ImageUrls $images): Preview
+    public function map(Data $data): FilmPreview
     {
-        return new Preview(
+        return new FilmPreview(
             id: $data->nullableInt('id') ?? $this->filmId,
             title: $data->nullableString('title.title'),
             originalTitle: $data->nullableString('originalTitle.title'),
@@ -38,9 +38,10 @@ final readonly class GetFilmPreview extends FilmEndpoint
             ),
             countries: array_map(static fn(Data $country): string => $country->string('code'), $data->list('countries')),
             synopsis: Markup::toPlainText($data->nullableString('plot.synopsis') ?? $data->nullableString('plotOrDescriptionSynopsis')),
-            posterUrl: $images->poster($data->nullableString('poster.path')),
-            mainCast: $this->people($data, 'mainCast'),
-            directors: $this->people($data, 'directors'),
+            poster: Image::tryFrom(ImageKind::Poster, $data->nullableString('poster.path')),
+            directors: PersonRefMapper::list($data, 'directors'),
+            mainCast: PersonRefMapper::list($data, 'mainCast'),
+            recommended: $data->bool('siteRecommends'),
         );
     }
 }

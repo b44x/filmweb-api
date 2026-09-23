@@ -16,11 +16,11 @@ Wersja 2.0 używa REST API strony (`www.filmweb.pl/api/v1`), więc zmieniły si�
 
 | 1.x | 2.0 |
 |---|---|
-| `getFilmInfoFull($id)->execute()` | `film($id)` (zbiorczo) albo `info($id)`, `preview($id)`, `rating($id)`, `dates($id)` |
-| `getFilmDescription($id)->execute()` | `description($id)` |
-| `getFilmPersons($id, $type, $page)` | `topCast($id)`, `preview($id)->directors`, `person($id)` |
+| `getFilmInfoFull($id)->execute()` | `films->get($id)` (zbiorczo) albo `films->info()`, `->preview()`, `->rating()`, `->dates()` |
+| `getFilmDescription($id)->execute()` | `films->description($id)` |
+| `getFilmPersons($id, $type, $page)` | `films->cast($id)`, `films->preview($id)->directors`, `people->get($id)` |
 | `Login`, `getUserFilmVotes`, `getFilmComments`, `getFilmImages`, `getFilmVideos`, `getFilmReview` | brak – patrz niżej |
-| — | `search($query)`, `whereToWatch($id)` (nowość) |
+| — | `search($query)`, `vod->offers($id)` (nowość) |
 
 Brakujące metody możesz dodać samodzielnie: podejrzyj endpoint przez `$filmweb->raw('/ścieżka')`,
 a potem zaimplementuj `Endpoint` (albo `FilmEndpoint`) – szczegóły w README, sekcja „Własne endpointy”.
@@ -29,7 +29,7 @@ a potem zaimplementuj `Endpoint` (albo `FilmEndpoint`) – szczegóły w README,
 
 - Zamiast `stdClass`/`false` dostajesz typowane obiekty albo `null` (HTTP 404).
 - `avgRate`/`votesCount` → `Rating::$average`/`Rating::$count` (+ `distribution`, `wantToSeeCount`).
-- `imagePath` → `TitleInfo::$posterUrl` (CDN `fwcdn.pl`).
+- `imagePath` → `TitleInfo::$poster` (`Image`, `->url($size)`; CDN `fwcdn.pl`).
 - `filmType` → enum `TitleType` (`film`, `serial`, `game`).
 - Opisy nie zawierają znaczników `[person=…]` – są czystym tekstem.
 

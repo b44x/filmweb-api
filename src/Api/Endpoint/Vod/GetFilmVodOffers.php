@@ -2,16 +2,17 @@
 
 declare(strict_types=1);
 
-namespace NSolutions\Filmweb\Api\Endpoint;
+namespace NSolutions\Filmweb\Api\Endpoint\Vod;
 
 use NSolutions\Filmweb\Api\Endpoint;
 use NSolutions\Filmweb\Model\VodOffer;
 use NSolutions\Filmweb\Model\VodProvider;
 use NSolutions\Filmweb\Support\Data;
-use NSolutions\Filmweb\Support\ImageUrls;
 
 /**
- * `GET /vod/film/{id}/providers/list` – streaming/rental offers of a film.
+ * `GET /vod/film/{id}/providers/list` – streaming and rental offers of a title.
+ *
+ * Prices are sent in grosze (1/100 PLN) and mapped to PLN.
  *
  * @implements Endpoint<list<VodOffer>>
  */
@@ -38,7 +39,7 @@ final readonly class GetFilmVodOffers implements Endpoint
     /**
      * @return list<VodOffer>
      */
-    public function map(Data $data, ImageUrls $images): array
+    public function map(Data $data): array
     {
         return array_map($this->offer(...), $data->items());
     }
@@ -54,19 +55,17 @@ final readonly class GetFilmVodOffers implements Endpoint
             url: $offer->string('link'),
             availableFrom: $offer->nullableDateTime('start'),
             availableUntil: $offer->nullableDateTime('end'),
-            buyPrice: $this->lowestPrice($payments, 'buy'),
-            rentPrice: $this->lowestPrice($payments, 'rent'),
-            subscription: $this->anyPayment($payments, 'subscription'),
-            free: $this->anyPayment($payments, 'free'),
+            buyPrice: self::lowestPrice($payments, 'buy'),
+            rentPrice: self::lowestPrice($payments, 'rent'),
+            subscription: self::anyPayment($payments, 'subscription'),
+            free: self::anyPayment($payments, 'free'),
         );
     }
 
     /**
-     * Prices are sent in grosze (1/100 PLN).
-     *
      * @param list<Data> $payments
      */
-    private function lowestPrice(array $payments, string $flag): ?float
+    private static function lowestPrice(array $payments, string $flag): ?float
     {
         $prices = [];
 
@@ -84,7 +83,7 @@ final readonly class GetFilmVodOffers implements Endpoint
     /**
      * @param list<Data> $payments
      */
-    private function anyPayment(array $payments, string $flag): bool
+    private static function anyPayment(array $payments, string $flag): bool
     {
         foreach ($payments as $payment) {
             if ($payment->bool($flag)) {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace NSolutions\Filmweb\Api\Endpoint;
+namespace NSolutions\Filmweb\Api\Endpoint\Film;
 
 use NSolutions\Filmweb\Api\Endpoint;
 

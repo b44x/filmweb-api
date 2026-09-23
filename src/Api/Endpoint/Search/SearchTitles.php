@@ -2,26 +2,28 @@
 
 declare(strict_types=1);
 
-namespace NSolutions\Filmweb\Api\Endpoint;
+namespace NSolutions\Filmweb\Api\Endpoint\Search;
 
-use InvalidArgumentException;
 use NSolutions\Filmweb\Api\Endpoint;
+use NSolutions\Filmweb\Api\Mapping\PersonRefMapper;
+use NSolutions\Filmweb\Exception\InvalidArgumentException;
 use NSolutions\Filmweb\Model\SearchHit;
 use NSolutions\Filmweb\Support\Data;
-use NSolutions\Filmweb\Support\ImageUrls;
 
 /**
  * `GET /live/search?query=…` – the autocomplete search used by filmweb.pl.
  *
  * @implements Endpoint<list<SearchHit>>
  */
-final readonly class Search implements Endpoint
+final readonly class SearchTitles implements Endpoint
 {
-    use MapsPeople;
+    private string $query;
 
-    public function __construct(private string $query)
+    public function __construct(string $query)
     {
-        if (trim($query) === '') {
+        $this->query = trim($query);
+
+        if ($this->query === '') {
             throw new InvalidArgumentException('Search query must not be empty.');
         }
     }
@@ -33,20 +35,20 @@ final readonly class Search implements Endpoint
 
     public function query(): array
     {
-        return ['query' => trim($this->query)];
+        return ['query' => $this->query];
     }
 
     /**
      * @return list<SearchHit>
      */
-    public function map(Data $data, ImageUrls $images): array
+    public function map(Data $data): array
     {
         return array_map(
-            fn(Data $hit): SearchHit => new SearchHit(
+            static fn(Data $hit): SearchHit => new SearchHit(
                 id: $hit->int('id'),
                 type: $hit->string('type'),
                 title: $hit->nullableString('matchedTitle') ?? '',
-                mainCast: $this->people($hit, 'filmMainCast'),
+                mainCast: PersonRefMapper::list($hit, 'filmMainCast'),
             ),
             $data->list('searchHits'),
         );
