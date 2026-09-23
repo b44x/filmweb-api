@@ -1,23 +1,69 @@
 {
     "name": "nsolutionspl/filmweb-api",
+    "description": "Nieoficjalny, typowany klient REST API Filmweb.pl (api/v1) dla PHP 8.2+",
     "type": "library",
-    "description": "Non-official API for Filmweb.pl",
-    "homepage": "https://github.com/nSolutionsPL/filmweb-api",
-    "keywords": ["filmweb", "api", "movies"],
+    "keywords": ["filmweb", "api", "client", "movies", "films", "psr-18"],
+    "homepage": "https://github.com/b44x/filmweb-api",
     "license": "MIT",
     "authors": [
+        {
+            "name": "Michell Hoduń",
+            "homepage": "https://github.com/b44x"
+        },
         {
             "name": "nSolutions.pl",
             "email": "biuro@nsolutions.pl",
             "homepage": "http://www.nsolutions.pl/"
         }
     ],
+    "support": {
+        "issues": "https://github.com/b44x/filmweb-api/issues",
+        "source": "https://github.com/b44x/filmweb-api"
+    },
     "require": {
-        "php": ">=5.4.0"
+        "php": "^8.2",
+        "ext-json": "*",
+        "psr/http-client": "^1.0",
+        "psr/http-factory": "^1.1",
+        "psr/simple-cache": "^2.0 || ^3.0"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.64",
+        "phpstan/phpstan": "^2.1",
+        "phpstan/phpstan-phpunit": "^2.0",
+        "phpstan/phpstan-strict-rules": "^2.0",
+        "phpunit/phpunit": "^11.5"
+    },
+    "suggest": {
+        "ext-curl": "Wymagane przez domyślny CurlTransport",
+        "guzzlehttp/guzzle": "Dowolny klient PSR-18 do użycia z Psr18Transport",
+        "symfony/http-client": "Dowolny klient PSR-18 do użycia z Psr18Transport"
     },
     "autoload": {
-        "psr-0": {
-            "nSolutions": "src"
+        "psr-4": {
+            "NSolutions\\Filmweb\\": "src/"
         }
-    }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "NSolutions\\Filmweb\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "analyse": "phpstan analyse --memory-limit=1G",
+        "cs": "php-cs-fixer fix --dry-run --diff",
+        "cs:fix": "php-cs-fixer fix",
+        "check": ["@cs", "@analyse", "@test"]
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "2.x-dev"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
 }
