@@ -22,6 +22,10 @@ final class CurlTransport implements Transport
 
     public function get(string $url, array $headers = []): Response
     {
+        if ($url === '') {
+            throw new TransportException('URL must not be empty.');
+        }
+
         $handle = $this->handle();
 
         curl_setopt_array($handle, [
@@ -39,9 +43,7 @@ final class CurlTransport implements Transport
             throw new TransportException(\sprintf('cURL error #%d: %s', curl_errno($handle), curl_error($handle)));
         }
 
-        $status = curl_getinfo($handle, CURLINFO_RESPONSE_CODE);
-
-        return new Response(\is_int($status) ? $status : 0, $body);
+        return new Response(curl_getinfo($handle, CURLINFO_RESPONSE_CODE), $body);
     }
 
     private function handle(): CurlHandle

@@ -21,7 +21,9 @@ final readonly class TitleInfo
      */
     public function url(): string
     {
-        $slug = implode('-', array_filter([urlencode($this->title), $this->year === null ? null : (string) $this->year, (string) $this->id]));
+        $slug = $this->year === null
+            ? \sprintf('%s-%d', urlencode($this->title), $this->id)
+            : \sprintf('%s-%d-%d', urlencode($this->title), $this->year, $this->id);
 
         return \sprintf('https://www.filmweb.pl/%s/%s', ($this->type ?? TitleType::Film)->urlSegment(), $slug);
     }

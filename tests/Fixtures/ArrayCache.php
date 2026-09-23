@@ -62,11 +62,12 @@ final class ArrayCache implements CacheInterface
     }
 
     /**
-     * @param iterable<string, mixed> $values
+     * @param iterable<mixed, mixed> $values
      */
     public function setMultiple(iterable $values, DateInterval|int|null $ttl = null): bool
     {
         foreach ($values as $key => $value) {
+            \assert(\is_string($key));
             $this->set($key, $value, $ttl);
         }
 

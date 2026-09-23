@@ -163,7 +163,7 @@ final class FilmResourceTest extends TestCase
         self::assertSame(148, $film->preview?->duration);
         self::assertSame(872129, $film->rating?->count);
         self::assertSame(8.1, $film->criticsRating?->rounded());
-        self::assertSame([], $film->criticsRating?->distribution);
+        self::assertSame([], $film->criticsRating->distribution);
         self::assertSame('2010-07-30', $film->dates?->countryRelease?->date->format('Y-m-d'));
         self::assertCount(5, $this->transport->requestedUrls);
     }

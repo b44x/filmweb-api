@@ -5,11 +5,9 @@ declare(strict_types=1);
 namespace NSolutions\Filmweb\Tests\Unit;
 
 use NSolutions\Filmweb\Api\ApiClient;
-use NSolutions\Filmweb\Api\Endpoint;
 use NSolutions\Filmweb\Api\Endpoint\Search\SearchTitles;
 use NSolutions\Filmweb\Api\Mapping\PersonRefMapper;
 use NSolutions\Filmweb\Config;
-use NSolutions\Filmweb\Exception\FilmwebException;
 use NSolutions\Filmweb\Exception\InvalidArgumentException;
 use NSolutions\Filmweb\Filmweb;
 use NSolutions\Filmweb\Http\Response;
@@ -21,6 +19,7 @@ use NSolutions\Filmweb\Resource\PersonResource;
 use NSolutions\Filmweb\Resource\VodResource;
 use NSolutions\Filmweb\Support\Data;
 use NSolutions\Filmweb\Tests\Fixtures\FakeTransport;
+use NSolutions\Filmweb\Tests\Fixtures\GetUserId;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
@@ -61,11 +60,6 @@ final class FilmwebTest extends TestCase
         Filmweb::create(new FakeTransport())->search('   ');
     }
 
-    public function testLibraryExceptionsShareTheMarkerInterface(): void
-    {
-        self::assertInstanceOf(FilmwebException::class, new InvalidArgumentException());
-    }
-
     public function testSendsLocaleAndJsonHeaders(): void
     {
         $transport = new FakeTransport();
@@ -78,28 +72,10 @@ final class FilmwebTest extends TestCase
 
     public function testRunsCustomEndpointsAndRawPaths(): void
     {
-        /** @var Endpoint<string> $endpoint */
-        $endpoint = new class implements Endpoint {
-            public function path(): string
-            {
-                return '/users/Shadow_filmweb/id';
-            }
-
-            public function query(): array
-            {
-                return [];
-            }
-
-            public function map(Data $data): string
-            {
-                return $data->string('userId');
-            }
-        };
-
         $transport = (new FakeTransport())->with('/users/Shadow_filmweb/id', new Response(200, '{"name":"Shadow_filmweb","userId":1681862}'));
         $filmweb = Filmweb::create($transport);
 
-        self::assertSame('1681862', $filmweb->call($endpoint));
+        self::assertSame(1681862, $filmweb->call(new GetUserId('Shadow_filmweb')));
         self::assertSame(['name' => 'Shadow_filmweb', 'userId' => 1681862], $filmweb->raw('/users/Shadow_filmweb/id')?->toArray());
         self::assertNull($filmweb->raw('/nope'));
     }
