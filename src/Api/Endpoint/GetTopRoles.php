@@ -1,0 +1,39 @@
+<?php
+
+declare(strict_types=1);
+
+namespace NSolutions\Filmweb\Api\Endpoint;
+
+use NSolutions\Filmweb\Model\TopRole;
+use NSolutions\Filmweb\Support\Data;
+use NSolutions\Filmweb\Support\ImageUrls;
+
+/**
+ * `GET /film/{id}/top-roles` – best rated roles (person IDs only, see {@see GetPerson}).
+ *
+ * @extends FilmEndpoint<list<TopRole>>
+ */
+final readonly class GetTopRoles extends FilmEndpoint
+{
+    protected function resource(): string
+    {
+        return 'top-roles';
+    }
+
+    /**
+     * @return list<TopRole>
+     */
+    public function map(Data $data, ImageUrls $images): array
+    {
+        return array_map(
+            static fn(Data $role): TopRole => new TopRole(
+                id: $role->int('id'),
+                personId: $role->int('person'),
+                profession: $role->nullableString('profession') ?? 'unknown',
+                rating: $role->nullableFloat('rate') ?? 0.0,
+                votesCount: $role->nullableInt('count') ?? 0,
+            ),
+            $data->items(),
+        );
+    }
+}
